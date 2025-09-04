@@ -68,7 +68,7 @@ int main() {
     float *ha, *hb, *hc_cpu, *hc_gpu_1d, *hc_gpu_3d; 
     // GPU matrices
     float *da, *db, *dc_1d, *dc_3d;
-    size_t size = sizeof(float);
+    size_t size = N * sizeof(float);
     
     // Allocate host/CPU memory
     ha = (float*)malloc(size);
@@ -104,6 +104,7 @@ int main() {
     );
 
     // Quick warmup test
+    printf("Running initial test\n");
     for (int i = 0; i < 5; i ++) {
         vector_add_cpu(ha, hb, hc_cpu, N);
         vector_add_gpu_1d<<<num_blocks_1d, BLOCK_SIZE_1D>>>(da, db, dc_1d, N);
@@ -112,6 +113,7 @@ int main() {
     }
 
     // CPU Implementation
+    printf("Adding on CPU\n");
     double cpu_total_time = 0.0;
     for (int i = 0; i < 100; i++) {
         double start_time = get_time();
@@ -122,6 +124,7 @@ int main() {
     double cpu_avg_time = cpu_total_time / 100.0;
 
     // GPU 1D Implementation
+    printf("Adding on GPU\n");
     double gpu_total_time = 0.0;
     for (int i = 0; i < 100; i++) {
         // Clear previous result on GPU
@@ -135,6 +138,7 @@ int main() {
     double gpu_1d_avg_time = gpu_total_time / 100.0;
 
     // 1D results verification
+    printf("Verifying\n");
     cudaMemcpy(hc_gpu_1d, dc_1d, size, cudaMemcpyDeviceToHost);
     bool correct_1d = true;
     for (int i = 0; i < N; i++) {
@@ -147,18 +151,20 @@ int main() {
     printf("1D Results are %s\n", correct_1d ? "correct" : "incorrect");
 
     // GPU 3D Implementation
-    double gpu_total_time = 0.0;
+    printf("Adding on GPU 3D\n");
+    double gpu_3d_total_time = 0.0;
     for (int i = 0; i < 100; i++) {
         cudaMemset(dc_3d, 0, size);
         double start_time = get_time();
         vector_add_gpu_3d<<<num_blocks_3d, block_size_3d>>>(da, db, dc_3d, nx, ny, nz);
         cudaDeviceSynchronize();
         double end_time = get_time();
-        gpu_total_time += end_time - start_time;
+        gpu_3d_total_time += end_time - start_time;
     }
-    double gpu_3d_avg_time = gpu_total_time / 100.0;
+    double gpu_3d_avg_time = gpu_3d_total_time / 100.0;
 
     // Verification of 3D
+    printf("Verifying\n");
     cudaMemcpy(hc_gpu_3d, dc_3d, size, cudaMemcpyDeviceToHost);
     bool correct_3d = true;
     for (int i = 0; i < N; i++) {
@@ -168,6 +174,7 @@ int main() {
             break;
         }
     }
+    printf("Results are %s\n", correct_3d ? "correct" : "incorrect");
 
     // Print results
     printf("CPU average time: %f milliseconds\n", cpu_avg_time * 1000);

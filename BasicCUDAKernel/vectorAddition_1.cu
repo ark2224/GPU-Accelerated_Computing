@@ -59,6 +59,7 @@ int main() {
     h_b = (float*)malloc(size);
     h_c_cpu = (float*)malloc(size);
     h_c_gpu = (float*)malloc(size);
+    printf("Allocated CPU memory\n");
 
     // Initialize inputs
     srand(time(NULL));
@@ -69,6 +70,7 @@ int main() {
     cudaMalloc(&d_a, size);
     cudaMalloc(&d_b, size);
     cudaMalloc(&d_c, size);
+    printf("Allocated GPU memory\n");
 
     // Copy CPU data to GPU device
     cudaMemcpy(d_a, h_a, size, cudaMemcpyHostToDevice);
@@ -78,15 +80,17 @@ int main() {
     int num_blocks = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
     // initial test
+    printf("Running initial test\n");
     for (int i = 0; i < 3; i++) {
         vector_add_cpu(h_a, h_b, h_c_cpu, N);
         vector_add_gpu<<<num_blocks, BLOCK_SIZE>>>(d_a, d_b, d_c, N);
-        // Synchronization adds barrier to coordinate disparate blocks
+        // Synchronization adds barrier to coordinate disparate blocks;
+        // PREVENTS RACE CONDITION
         cudaDeviceSynchronize();
     }
 
     // CPU Addition
-    printf("Adding on CPU");
+    printf("Adding on CPU\n");
     double cpu_total_time = 0.0;
     for (int i = 0; i < 100; i++) {
         double start_time = get_time();
@@ -97,11 +101,11 @@ int main() {
     double cpu_avg_time = cpu_total_time / 100.0;
 
     // GPU Addition
-    printf("Adding on CPU");
+    printf("Adding on GPU\n");
     double gpu_total_time = 0.0;
     for (int i = 0; i < 100; i++) {
         double start_time = get_time();
-        vector_add_cpu(d_a, d_b, d_c, N);
+        vector_add_gpu<<<num_blocks,BLOCK_SIZE>>>(d_a, d_b, d_c, N);
         cudaDeviceSynchronize();
         double end_time = get_time();
         gpu_total_time += end_time - start_time;
@@ -110,7 +114,7 @@ int main() {
 
     // Results
     printf("CPU average time: %f milliseconds\n", cpu_avg_time*1000);
-    printf("CPU average time: %f milliseconds\n", gpu_avg_time*1000);
+    printf("GPU average time: %f milliseconds\n", gpu_avg_time*1000);
     printf("Speedup (cpu_time / gpu_time): %f\n", cpu_avg_time / gpu_avg_time);
 
     // Verification of results
@@ -129,9 +133,9 @@ int main() {
     free(h_b);
     free(h_c_cpu);
     free(h_c_gpu);
-    free(d_a);
-    free(d_b);
-    free(d_c);
+    cudaFree(d_a);
+    cudaFree(d_b);
+    cudaFree(d_c);
 
     return 0;
 }
