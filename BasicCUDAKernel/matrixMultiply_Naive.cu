@@ -59,12 +59,12 @@ void init_matrix(float *mat, int rows, int cols) {
     }
 }
 
-// Execution Time Measurement
-double get_time() {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec + ts.tv_nsec * 1e-9;
-}
+// // Execution Time Measurement
+// double get_time() {
+//     struct timespec ts;
+//     clock_gettime(CLOCK_MONOTONIC, &ts);
+//     return ts.tv_sec + ts.tv_nsec * 1e-9;
+// }
 
 int main() {
     // CPU matrices and vectors
@@ -109,10 +109,10 @@ int main() {
     // CPU matmul Run
     double cpu_total_time = 0.0;
     for (int i = 0; i < 50; i++) {
-        double start_time = get_time();
+        // double start_time = get_time();
         matmul_cpu(hA, hB, hC_cpu, M, K, N);
-        double end_time = get_time();
-        cpu_total_time += end_time - start_time;
+        // double end_time = get_time();
+        // cpu_total_time += end_time - start_time;
     }
     double cpu_avg_time = cpu_total_time / 50.0;
 
@@ -120,11 +120,11 @@ int main() {
     double gpu_total_time = 0.0;
     for (int i = 0; i < 50; i++) {
         cudaMemset(dC, 0, size_C);
-        double start_time = get_time();
+        // double start_time = get_time();
         matmul_gpu<<<gridDim, blockDim>>>(dA, dB, dC, M, K, N);
         cudaDeviceSynchronize();
-        double end_time = get_time();
-        gpu_total_time += end_time - start_time;
+        // double end_time = get_time();
+        // gpu_total_time += end_time - start_time;
     }
     double gpu_avg_time = gpu_total_time / 50.0;
 
