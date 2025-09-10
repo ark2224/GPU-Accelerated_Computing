@@ -21,6 +21,7 @@ __global__ void vectorAdd(const float *A, const float *B, float *C, int numEleme
 int main(void) {
     int numElements = 50000;
     size_t size = numElements * sizeof(float);
+
     float *hA, *hB, *hC;
     float *dA, *dB, *dC;
     cudaStream_t stream1, stream2;
@@ -75,8 +76,8 @@ int main(void) {
     CHECK_CUDA_ERROR(cudaFree(dA));
     CHECK_CUDA_ERROR(cudaFree(dB));
     CHECK_CUDA_ERROR(cudaFree(dC));
-    CHECK_CUDA_ERROR(cudaFree(stream1));
-    CHECK_CUDA_ERROR(cudaFree(stream2));
+    CHECK_CUDA_ERROR(cudaStreamDestroy(stream1));
+    CHECK_CUDA_ERROR(cudaStreamDestroy(stream2));
     free(hA);
     free(hB);
     free(hC);
